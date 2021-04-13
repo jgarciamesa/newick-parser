@@ -101,9 +101,18 @@ read_newick = function(file) {
     }
   }
   
-  # return order of alignment of sequences
-  return(clades(tree,edges,ninode,nleaf))
+  # order of alignment of sequences (clades)
+  cld = clades(tree,edges,ninode,nleaf)
   
+  # substitute leaf ID with leaf label
+  for(i in 1:length(cld)) {
+    for(j in 1:length(cld[[i]])) {
+      cld[[i]][j] = leaf.label[as.numeric(cld[[i]][j])]
+    }
+  }
+  
+  # return alignment order
+  return(cld)
 }
 
 # create a list of clades (only containing leafs) that will determine the order
