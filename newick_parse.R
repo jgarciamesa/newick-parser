@@ -8,40 +8,40 @@
 suppressMessages(library(stringr))     # string operations
 
 read_newick = function(file) {
-  
+
   tree <- scan(file, what = "", sep = "\n", quiet = TRUE)
 
   if (identical(tree, character(0))) {
     warning("Empty character string.")
     return(NULL)
   }
-  
+
   tree <- gsub("[ \t]", "", tree)   # remove tabs
-  
+
   tree.length = nchar(tree)
   tree.list = strsplit(tree,"")[[1]]
-  
+
   ninode = str_count(tree,"\\(")
   nleaf = str_count(tree,",")+1
-  
+
   edges = NULL    # list of edges: from,to,length
   inode.label = leaf.label = c()
   inode = seq(nleaf+1,nleaf+ninode)
-  
+
   i = 1
   inode.pos = 0
   current_leaf = 1
-  
+
   while(i <= tree.length) {
 
     if(identical(tree.list[i],'(')) { # new inode
       inode.pos = inode.pos + 1
       i = i + 1
- 
+
     } else if(identical(tree.list[i],')')) { # add inode info and go up
-      
+
       i = i + 1
-      
+
       if(identical(tree.list[i],';')) {
         inode.label = c(inode.label,NA)
         break
@@ -57,7 +57,7 @@ read_newick = function(file) {
       # read edge length
       len = str_extract(substr(tree,i,tree.length),"[0-9]+(.[0-9]+)?")
       edges = rbind(edges,c(inode[inode.pos-1],inode[inode.pos],as.numeric(len)))
-      
+
       i = i + nchar(len)
       if(identical(tree.list[i],","))
         i = i + 1
@@ -80,17 +80,17 @@ read_newick = function(file) {
       # read edge length
       len = str_extract(substr(tree,i,tree.length),"[0-9]+(.[0-9]+)?")
       edges = rbind(edges,c(inode[inode.pos],current_leaf,as.numeric(len)))
-      
+
       i = i + nchar(len)
       if(identical(tree.list[i],','))
         i = i + 1
-      
+
       # update current leaf
       current_leaf = current_leaf + 1
 
     } else if(identical(tree.list[i],';')) {  # end of tree
 
-      if(i != length(tree)) {
+      if(i != length(tree.list)) {
         warning("End of tree char ';' is not at end of input string")
         return(NULL)
       }
@@ -100,17 +100,17 @@ read_newick = function(file) {
       return(NULL)
     }
   }
-  
+
   # order of alignment of sequences (clades)
   cld = clades(tree,edges,ninode,nleaf)
-  
+
   # substitute leaf ID with leaf label
   for(i in 1:length(cld)) {
     for(j in 1:length(cld[[i]])) {
       cld[[i]][j] = leaf.label[as.numeric(cld[[i]][j])]
     }
   }
-  
+
   # return alignment order
   return(cld)
 }
